@@ -257,7 +257,7 @@ const struct device *flash_area_get_device(const struct flash_area *fa);
  */
 uint8_t flash_area_erased_val(const struct flash_area *fa);
 
-#if USE_PARTITION_MANAGER
+#ifdef USE_PARTITION_MANAGER
 #include <flash_map_pm.h>
 #else
 

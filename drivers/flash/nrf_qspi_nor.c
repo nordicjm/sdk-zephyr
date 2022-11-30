@@ -1053,6 +1053,8 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 			  const void *src,
 			  size_t size)
 {
+
+LOG_ERR("QSPI write at %ld from bug %p size %d", addr, src, size);
 	if (!src) {
 		return -EINVAL;
 	}

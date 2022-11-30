@@ -19,6 +19,9 @@
 #include <soc.h>
 #include <zephyr/init.h>
 
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(mein, 4);
+
 void flash_area_foreach(flash_area_cb_t user_cb, void *user_data)
 {
 	for (int i = 0; i < flash_map_entries; i++) {
@@ -28,18 +31,22 @@ void flash_area_foreach(flash_area_cb_t user_cb, void *user_data)
 
 int flash_area_open(uint8_t id, const struct flash_area **fap)
 {
+LOG_ERR("open %d", id);
 	const struct flash_area *area;
 
 	if (flash_map == NULL) {
+LOG_ERR("e1");
 		return -EACCES;
 	}
 
 	area = get_flash_area_from_id(id);
 	if (area == NULL) {
+LOG_ERR("e2");
 		return -ENOENT;
 	}
 
 	if (!area->fa_dev || !device_is_ready(area->fa_dev)) {
+LOG_ERR("e3");
 		return -ENODEV;
 	}
 
@@ -56,7 +63,9 @@ void flash_area_close(const struct flash_area *fa)
 int flash_area_read(const struct flash_area *fa, off_t off, void *dst,
 		    size_t len)
 {
+//LOG_ERR("read %p, %ld, %d", fa, fa->fa_off + off, len);
 	if (!is_in_flash_area_bounds(fa, off, len)) {
+LOG_ERR("e4");
 		return -EINVAL;
 	}
 
@@ -66,16 +75,28 @@ int flash_area_read(const struct flash_area *fa, off_t off, void *dst,
 int flash_area_write(const struct flash_area *fa, off_t off, const void *src,
 		     size_t len)
 {
+LOG_ERR("write %p, %ld, %d", fa, fa->fa_off + off, len);
 	if (!is_in_flash_area_bounds(fa, off, len)) {
+LOG_ERR("e5");
 		return -EINVAL;
 	}
 
-	return flash_write(fa->fa_dev, fa->fa_off + off, (void *)src, len);
+int rc;
+
+	/*return*/ rc = flash_write(fa->fa_dev, fa->fa_off + off, (void *)src, len);
+
+if (rc != 0) {
+LOG_ERR("eX = %d", rc);
+}
+
+return rc;
 }
 
 int flash_area_erase(const struct flash_area *fa, off_t off, size_t len)
 {
+LOG_ERR("erase %p, %ld, %d", fa, fa->fa_off + off, len);
 	if (!is_in_flash_area_bounds(fa, off, len)) {
+LOG_ERR("e6");
 		return -EINVAL;
 	}
 

@@ -266,10 +266,10 @@ class KconfigCheck(ComplianceTest):
 
         self.check_top_menu_not_too_long(kconf)
         self.check_no_pointless_menuconfigs(kconf)
-        self.check_no_undef_within_kconfig(kconf)
         self.check_no_redefined_in_defconfig(kconf)
         self.check_no_enable_in_boolean_prompt(kconf)
         if full:
+            self.check_no_undef_within_kconfig(kconf)
             self.check_no_undef_outside_kconfig(kconf)
 
     def get_modules(self, modules_file):

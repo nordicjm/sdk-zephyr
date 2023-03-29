@@ -34,6 +34,37 @@ config MCUMGR_SMP_LEGACY_RC_BEHAVIOUR
 	  response will be empty with the new behaviour enabled, as opposed to
 	  the old behaviour where the rc field will be present in the response.
 
+config SMP_CLIENT
+	bool "SMP Client support"
+	help
+	  This will enable SMP Request generation and response handling.
+
+if SMP_CLIENT || ZTEST
+
+config SMP_CMD_DEFAULT_LIFE_TIME
+	int "SMP command lifetime in seconds"
+	range 2 30
+	default 5
+	help
+	  This define lifetime for SMP client send request. This configure is used if request
+	  with timeout 0 are used.
+
+config SMP_CMD_RETRY_TIME
+	int "SMP command re-send period in ms"
+	range 100 1000
+	default 500
+	help
+	  The time (in ms) which the SMP client will wait for a response before re-sending
+	  a command.
+
+config SMP_CLIENT_CMD_MAX
+	int "SMP client max buffer count"
+	default 4
+	help
+	  Define how many active requests that the client can handle
+
+endif # SMP_CLIENT
+
 menu "Command Handlers"
 
 rsource "grp/Kconfig"

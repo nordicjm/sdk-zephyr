@@ -7,3 +7,4 @@
 # Protocol API is only exposed to MCUmgr internals.
 zephyr_library(mgmt_mcumgr_protocol)
 zephyr_library_sources(src/smp.c)
+zephyr_library_sources_ifdef(CONFIG_SMP_CLIENT src/client.c)

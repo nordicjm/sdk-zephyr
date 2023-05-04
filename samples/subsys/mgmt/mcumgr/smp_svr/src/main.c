@@ -8,6 +8,7 @@
 #include <zephyr/kernel.h>
 #include <zephyr/stats/stats.h>
 #include <zephyr/usb/usb_device.h>
+#include <zephyr/dfu/mcuboot.h>
 
 #ifdef CONFIG_MCUMGR_GRP_FS
 #include <zephyr/device.h>
@@ -82,6 +83,16 @@ int main(void)
 	 * compile which is convenient when testing firmware upgrade.
 	 */
 	LOG_INF("build time: " __DATE__ " " __TIME__);
+	LOG_INF("Version XX");
+	rc = boot_is_img_confirmed();
+	LOG_INF("Image is%s confirmed OK", rc ? "" : " not");
+	if (!rc) {
+		if (boot_write_img_confirmed()) {
+			LOG_ERR("Failed to confirm image");
+			return -1;
+		}
+		LOG_INF("Marked image as OK");
+	}
 
 	/* The system work queue handles all incoming mcumgr requests.  Let the
 	 * main thread idle while the mcumgr server runs.

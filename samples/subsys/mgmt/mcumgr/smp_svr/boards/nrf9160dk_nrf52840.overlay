@@ -1,0 +1,74 @@
+/*
+    | nRF9160     |                            |    nRF52840    |
+    | RTS   P0.17 | -- nRF interface line 0 -- | P0.17  CTS     |
+    |       P0.18 | -- nRF interface line 1 -- | P0.20          |
+    |       P0.19 | -- nRF interface line 2 -- | P0.15          |
+    | RX    P0.21 | -- nRF interface line 3 -- | P0.22  TX      |
+    | CTS   P0.22 | -- nRF interface line 4 -- | P1.04  RTS     |
+    | TX    P0.23 | -- nRF interface line 5 -- | P1.02  RX      |
+    |       COEX0 | -- nRF interface line 6 -- | P1.13          |
+    |       COEX1 | -- nRF interface line 7 -- | P1.11          |
+    |       COEX2 | -- nRF interface line 8 -- | P1.15          |
+    |       P0.24 | -- nRF interface line 9 -- | P0.18 (nRESET) | (in v0.14.0 or later)
+*/
+
+&pinctrl {
+	uart1_default: uart1_default {
+		group1 {
+			psels = <NRF_PSEL(UART_TX, 0, 22)>,
+				<NRF_PSEL(UART_RTS, 1, 04)>;
+		};
+		group2 {
+			psels = <NRF_PSEL(UART_RX, 1, 2)>,
+				<NRF_PSEL(UART_CTS, 0, 17)>;
+			bias-pull-up;
+		};
+	};
+
+	uart1_sleep: uart1_sleep {
+		group1 {
+			psels =<NRF_PSEL(UART_TX, 0, 22)>,
+				<NRF_PSEL(UART_RX, 1, 2)>,
+				<NRF_PSEL(UART_RTS, 1, 04)>,
+				<NRF_PSEL(UART_CTS, 0, 17)>;
+			low-power-enable;
+		};
+	};
+
+};
+
+&nrf_interface_pins_0_2_routing {
+        status = "okay";
+};
+
+&nrf_interface_pins_3_5_routing {
+        status = "okay";
+};
+
+&reset_input {
+	status = "okay";
+};
+
+&uart1 {
+	compatible = "nordic,nrf-uarte";
+	current-speed = <1000000>;
+	status = "okay";
+	pinctrl-0 = <&uart1_default>;
+	pinctrl-1 = <&uart1_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+/ {
+	aliases {
+		serial-in = &uart0;
+		serial-out = &uart1;
+	};
+};
+
+/ {
+        chosen {
+                zephyr,console = &uart0;
+                zephyr,shell-uart = &uart0;
+                zephyr,uart-mcumgr = &uart1;
+        };
+};

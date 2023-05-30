@@ -46,8 +46,8 @@ config SMP_CMD_DEFAULT_LIFE_TIME
 	range 2 30
 	default 5
 	help
-	  This define lifetime for SMP client send request. This configure is used if request
-	  with timeout 0 are used.
+	  This define lifetime for SMP client send request. This configure is used if a request
+	  with a timeout of 0 is used.
 
 config SMP_CMD_RETRY_TIME
 	int "SMP command re-send period in ms"

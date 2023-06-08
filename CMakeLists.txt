@@ -1728,7 +1728,6 @@ if(CONFIG_OUTPUT_SYMBOLS)
 endif()
 
 if(CONFIG_OUTPUT_STAT)
-#  zephyr_post_build(TOOLS bintools COMMAND readelf FLAGS headers INFILE file OUTFILE outfile)
   list(APPEND
     post_build_commands
     COMMAND $<TARGET_PROPERTY:bintools,readelf_command>

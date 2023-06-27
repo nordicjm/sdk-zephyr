@@ -245,7 +245,7 @@
 		reg = <0>;
 		/* MX25R64 supports only pp and pp4io */
 		/* Thingy:53 supports only pp and pp2o options */
-		writeoc = "pp";
+		writeoc = "pp2o";
 		/* MX25R64 supports all readoc options */
 		/* Thingy:53 supports only fastread and read2io options */
 		readoc = "read2io";

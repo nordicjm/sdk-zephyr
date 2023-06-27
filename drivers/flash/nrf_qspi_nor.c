@@ -6,6 +6,7 @@
 
 #define DT_DRV_COMPAT nordic_qspi_nor
 
+#include <zephyr/irq.h>
 #include <errno.h>
 #include <zephyr/drivers/flash.h>
 #include <zephyr/init.h>
@@ -24,6 +25,10 @@ LOG_MODULE_REGISTER(qspi_nor, CONFIG_FLASH_LOG_LEVEL);
 #include <nrfx_qspi.h>
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
+
+#define QSPI_STD_CMD_WRSR  0x01
+#define QSPI_STD_CMD_RSTEN 0x66
+#define QSPI_STD_CMD_RST   0x99
 
 struct qspi_nor_data {
 #ifdef CONFIG_MULTITHREADING
@@ -179,6 +184,8 @@ static bool qspi_initialized;
 
 static int qspi_device_init(const struct device *dev);
 static void qspi_device_uninit(const struct device *dev);
+void z_impl_nrf_qspi_nor_xip_enable(const struct device *dev, bool enable);
+void z_vrfy_nrf_qspi_nor_xip_enable(const struct device *dev, bool enable);
 
 #define WORD_SIZE 4
 
@@ -353,9 +360,17 @@ static void qspi_handler(nrfx_qspi_evt_t event, void *p_context)
 	}
 }
 
+#ifndef CONFIG_MCUBOOT
+static nrfx_qspi_config_t qspi_config_fast;
+#endif
+
 static int qspi_device_init(const struct device *dev)
 {
 	struct qspi_nor_data *dev_data = dev->data;
+
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+	bool driver_setup = false;
+#endif
 
 	if (dev_data->xip_enabled) {
 		return 0;
@@ -385,9 +400,66 @@ static int qspi_device_init(const struct device *dev)
 				     dev_data);
 		ret = qspi_get_zephyr_ret_code(res);
 		qspi_initialized = (ret == 0);
+
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+		driver_setup = true;
+#endif
+
+#ifndef CONFIG_MCUBOOT
+		nrf_qspi_cinstr_conf_t cinstr_cfg = {
+			.opcode    = QSPI_STD_CMD_RSTEN,
+			.length    = NRF_QSPI_CINSTR_LEN_1B,
+			.io2_level = true,
+			.io3_level = true,
+			.wipwait   = true,
+		};
+
+		uint8_t flash_chip_cfg[] = {
+			/* QE (Quad Enable) bit = 1 */
+			//BIT(6),
+			0x00,
+			0x00,
+			/* L/H Switch bit = 1 -> High Performance mode */
+			BIT(1),
+		};
+
+		nrf_clock_hfclk192m_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
+
+		/* Send reset enable */
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+
+		/* Send reset command */
+		cinstr_cfg.opcode = QSPI_STD_CMD_RST;
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+
+		/* Switch to Quad I/O and High Performance mode */
+		cinstr_cfg.opcode = QSPI_STD_CMD_WRSR;
+		cinstr_cfg.wren   = true;
+		cinstr_cfg.length = NRF_QSPI_CINSTR_LEN_4B;
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, &flash_chip_cfg, NULL);
+
+		nrfx_qspi_uninit();
+
+		/* Switch to 48MHz QSPI clock speed */
+		memcpy(&qspi_config_fast, &dev_config->nrfx_cfg, sizeof(nrfx_qspi_config_t));
+		qspi_config_fast.phy_if.sck_freq = 2;
+		qspi_config_fast.phy_if.sck_delay = 0x05;
+
+		res = nrfx_qspi_init(&qspi_config_fast, qspi_handler, dev_data);
+		ret = qspi_get_zephyr_ret_code(res);
+#endif
 	}
 
 	qspi_unlock(dev);
+
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+	if (driver_setup) {
+		/* Enable XIP mode for QSPI NOR flash, this will prevent the
+		 * flash from being powered down
+		 */
+		z_impl_nrf_qspi_nor_xip_enable(dev, true);
+	}
+#endif
 
 	return ret;
 #endif
@@ -611,6 +683,8 @@ static int qspi_wrsr(const struct device *dev, uint8_t sr_val, uint8_t sr_num)
 /* QSPI erase */
 static int qspi_erase(const struct device *dev, uint32_t addr, uint32_t size)
 {
+	uint32_t lock_key;
+
 	/* address must be sector-aligned */
 	if ((addr % QSPI_SECTOR_SIZE) != 0) {
 		return -EINVAL;
@@ -620,6 +694,8 @@ static int qspi_erase(const struct device *dev, uint32_t addr, uint32_t size)
 	if ((size == 0) || (size % QSPI_SECTOR_SIZE) != 0) {
 		return -EINVAL;
 	}
+
+	lock_key = irq_lock();
 
 	int rv = 0;
 	const struct qspi_nor_config *params = dev->config;
@@ -681,6 +757,8 @@ out_trans_unlock:
 
 out:
 	qspi_device_uninit(dev);
+	irq_unlock(lock_key);
+
 	return rv;
 }
 
@@ -1088,6 +1166,8 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 			  const void *src,
 			  size_t size)
 {
+	uint32_t lock_key;
+
 	if (!src) {
 		return -EINVAL;
 	}
@@ -1112,6 +1192,8 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 			"Addr: 0x%lx size %zu", (long)addr, size);
 		return -EINVAL;
 	}
+
+	lock_key = irq_lock();
 
 	nrfx_err_t res = NRFX_SUCCESS;
 
@@ -1146,6 +1228,8 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 	rc = qspi_get_zephyr_ret_code(res);
 out:
 	qspi_device_uninit(dev);
+	irq_unlock(lock_key);
+
 	return rc;
 }
 
@@ -1360,6 +1444,10 @@ static int qspi_nor_pm_action(const struct device *dev,
 		}
 #endif
 
+		if (dev_data->xip_enabled) {
+			return -EBUSY;
+		}
+
 		if (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) {
 			return -EBUSY;
 		}
@@ -1420,6 +1508,7 @@ void z_impl_nrf_qspi_nor_xip_enable(const struct device *dev, bool enable)
 #endif
 	qspi_lock(dev);
 	dev_data->xip_enabled = enable;
+
 	qspi_unlock(dev);
 
 	qspi_device_uninit(dev);

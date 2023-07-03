@@ -26,6 +26,10 @@ LOG_MODULE_REGISTER(qspi_nor, CONFIG_FLASH_LOG_LEVEL);
 #include <hal/nrf_clock.h>
 #include <hal/nrf_gpio.h>
 
+#define QSPI_STD_CMD_WRSR  0x01
+#define QSPI_STD_CMD_RSTEN 0x66
+#define QSPI_STD_CMD_RST   0x99
+
 struct qspi_nor_data {
 #ifdef CONFIG_MULTITHREADING
 	/* The semaphore to control exclusive access on write/erase. */
@@ -356,6 +360,10 @@ static void qspi_handler(nrfx_qspi_evt_t event, void *p_context)
 	}
 }
 
+#ifndef CONFIG_MCUBOOT
+static nrfx_qspi_config_t qspi_config_fast;
+#endif
+
 static int qspi_device_init(const struct device *dev)
 {
 	struct qspi_nor_data *dev_data = dev->data;
@@ -395,6 +403,53 @@ static int qspi_device_init(const struct device *dev)
 
 #ifdef CONFIG_NORDIC_QSPI_NOR_XIP
 		driver_setup = true;
+#endif
+
+
+#ifndef CONFIG_MCUBOOT
+        nrf_qspi_cinstr_conf_t cinstr_cfg = {
+                .opcode    = QSPI_STD_CMD_RSTEN,
+                .length    = NRF_QSPI_CINSTR_LEN_1B,
+                .io2_level = true,
+                .io3_level = true,
+                .wipwait   = true,
+        };
+        static const uint8_t flash_chip_cfg[] = {
+                /* QE (Quad Enable) bit = 1 */
+//                BIT(6),
+                0x00,
+                0x00,
+                /* L/H Switch bit = 1 -> High Performance mode */
+                BIT(1),
+        };
+
+        nrf_clock_hfclk192m_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
+
+        /* Send reset enable */
+        nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+
+        /* Send reset command */
+        cinstr_cfg.opcode = QSPI_STD_CMD_RST;
+        nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+
+        /* Switch to Quad I/O and High Performance mode */
+        cinstr_cfg.opcode = QSPI_STD_CMD_WRSR;
+        cinstr_cfg.wren   = true;
+        cinstr_cfg.length = NRF_QSPI_CINSTR_LEN_4B;
+        nrfx_qspi_cinstr_xfer(&cinstr_cfg, &flash_chip_cfg, NULL);
+
+//qspi_wait_for_completion(dev, NRFX_SUCCESS);
+
+		nrfx_qspi_uninit();
+
+memcpy(&qspi_config_fast, &dev_config->nrfx_cfg, sizeof(nrfx_qspi_config_t));
+qspi_config_fast.phy_if.sck_freq = 2;
+qspi_config_fast.phy_if.sck_delay = 0x05;
+
+		res = nrfx_qspi_init(&qspi_config_fast,
+				     qspi_handler,
+				     dev_data);
+		ret = qspi_get_zephyr_ret_code(res);
 #endif
 	}
 

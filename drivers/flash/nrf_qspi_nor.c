@@ -358,6 +358,10 @@ static int qspi_device_init(const struct device *dev)
 {
 	struct qspi_nor_data *dev_data = dev->data;
 
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+	bool driver_setup = false;
+#endif
+
 	if (dev_data->xip_enabled) {
 		return 0;
 	}
@@ -378,10 +382,6 @@ static int qspi_device_init(const struct device *dev)
 	k_sem_give(&dev_data->count);
 #endif
 
-#ifndef CONFIG_MCUBOOT
-bool doneinit = false;
-#endif
-
 	if (!qspi_initialized) {
 		const struct qspi_nor_config *dev_config = dev->config;
 
@@ -391,18 +391,20 @@ bool doneinit = false;
 		ret = qspi_get_zephyr_ret_code(res);
 		qspi_initialized = (ret == 0);
 
-#ifndef CONFIG_MCUBOOT
-doneinit = true;
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+		driver_setup = true;
 #endif
 	}
 
 	qspi_unlock(dev);
 
-#ifndef CONFIG_MCUBOOT
-if (doneinit) {
-z_impl_nrf_qspi_nor_xip_enable(dev, true);
-//nrf_qspi_xip_set(NRF_QSPI, true);
-}
+#ifdef CONFIG_NORDIC_QSPI_NOR_XIP
+	if (driver_setup) {
+		/* Enable XIP mode for QSPI NOR flash, this will prevent the
+		 * flash from being powered down
+		 */
+		z_impl_nrf_qspi_nor_xip_enable(dev, true);
+	}
 #endif
 
 	return ret;
@@ -1249,8 +1251,6 @@ static int qspi_nor_configure(const struct device *dev)
  */
 static int qspi_nor_init(const struct device *dev)
 {
-//return -5;
-
 	const struct qspi_nor_config *dev_config = dev->config;
 	int ret = pinctrl_apply_state(dev_config->pcfg, PINCTRL_STATE_DEFAULT);
 

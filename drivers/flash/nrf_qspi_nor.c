@@ -180,6 +180,8 @@ static bool qspi_initialized;
 
 static int qspi_device_init(const struct device *dev);
 static void qspi_device_uninit(const struct device *dev);
+void z_impl_nrf_qspi_nor_xip_enable(const struct device *dev, bool enable);
+void z_vrfy_nrf_qspi_nor_xip_enable(const struct device *dev, bool enable);
 
 #define WORD_SIZE 4
 

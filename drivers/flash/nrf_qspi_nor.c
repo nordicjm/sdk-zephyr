@@ -405,50 +405,47 @@ static int qspi_device_init(const struct device *dev)
 		driver_setup = true;
 #endif
 
-
 #ifndef CONFIG_MCUBOOT
-        nrf_qspi_cinstr_conf_t cinstr_cfg = {
-                .opcode    = QSPI_STD_CMD_RSTEN,
-                .length    = NRF_QSPI_CINSTR_LEN_1B,
-                .io2_level = true,
-                .io3_level = true,
-                .wipwait   = true,
-        };
-        static const uint8_t flash_chip_cfg[] = {
-                /* QE (Quad Enable) bit = 1 */
-//                BIT(6),
-                0x00,
-                0x00,
-                /* L/H Switch bit = 1 -> High Performance mode */
-                BIT(1),
-        };
+		nrf_qspi_cinstr_conf_t cinstr_cfg = {
+			.opcode    = QSPI_STD_CMD_RSTEN,
+			.length    = NRF_QSPI_CINSTR_LEN_1B,
+			.io2_level = true,
+			.io3_level = true,
+			.wipwait   = true,
+		};
 
-        nrf_clock_hfclk192m_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
+		uint8_t flash_chip_cfg[] = {
+			/* QE (Quad Enable) bit = 1 */
+			//BIT(6),
+			0x00,
+			0x00,
+			/* L/H Switch bit = 1 -> High Performance mode */
+			BIT(1),
+		};
 
-        /* Send reset enable */
-        nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+		nrf_clock_hfclk192m_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
 
-        /* Send reset command */
-        cinstr_cfg.opcode = QSPI_STD_CMD_RST;
-        nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
+		/* Send reset enable */
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
 
-        /* Switch to Quad I/O and High Performance mode */
-        cinstr_cfg.opcode = QSPI_STD_CMD_WRSR;
-        cinstr_cfg.wren   = true;
-        cinstr_cfg.length = NRF_QSPI_CINSTR_LEN_4B;
-        nrfx_qspi_cinstr_xfer(&cinstr_cfg, &flash_chip_cfg, NULL);
+		/* Send reset command */
+		cinstr_cfg.opcode = QSPI_STD_CMD_RST;
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, NULL, NULL);
 
-//qspi_wait_for_completion(dev, NRFX_SUCCESS);
+		/* Switch to Quad I/O and High Performance mode */
+		cinstr_cfg.opcode = QSPI_STD_CMD_WRSR;
+		cinstr_cfg.wren   = true;
+		cinstr_cfg.length = NRF_QSPI_CINSTR_LEN_4B;
+		nrfx_qspi_cinstr_xfer(&cinstr_cfg, &flash_chip_cfg, NULL);
 
 		nrfx_qspi_uninit();
 
-memcpy(&qspi_config_fast, &dev_config->nrfx_cfg, sizeof(nrfx_qspi_config_t));
-qspi_config_fast.phy_if.sck_freq = 2;
-qspi_config_fast.phy_if.sck_delay = 0x05;
+		/* Switch to 48MHz QSPI clock speed */
+		memcpy(&qspi_config_fast, &dev_config->nrfx_cfg, sizeof(nrfx_qspi_config_t));
+		qspi_config_fast.phy_if.sck_freq = 2;
+		qspi_config_fast.phy_if.sck_delay = 0x05;
 
-		res = nrfx_qspi_init(&qspi_config_fast,
-				     qspi_handler,
-				     dev_data);
+		res = nrfx_qspi_init(&qspi_config_fast, qspi_handler, dev_data);
 		ret = qspi_get_zephyr_ret_code(res);
 #endif
 	}
@@ -686,6 +683,8 @@ static int qspi_wrsr(const struct device *dev, uint8_t sr_val, uint8_t sr_num)
 /* QSPI erase */
 static int qspi_erase(const struct device *dev, uint32_t addr, uint32_t size)
 {
+	uint32_t lock_key;
+
 	/* address must be sector-aligned */
 	if ((addr % QSPI_SECTOR_SIZE) != 0) {
 		return -EINVAL;
@@ -696,8 +695,7 @@ static int qspi_erase(const struct device *dev, uint32_t addr, uint32_t size)
 		return -EINVAL;
 	}
 
-uint32_t lockkey;
-lockkey = irq_lock();
+	lock_key = irq_lock();
 
 	int rv = 0;
 	const struct qspi_nor_config *params = dev->config;
@@ -759,7 +757,7 @@ out_trans_unlock:
 
 out:
 	qspi_device_uninit(dev);
-irq_unlock(lockkey);
+	irq_unlock(lock_key);
 
 	return rv;
 }
@@ -1168,6 +1166,8 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 			  const void *src,
 			  size_t size)
 {
+	uint32_t lock_key;
+
 	if (!src) {
 		return -EINVAL;
 	}
@@ -1193,8 +1193,7 @@ static int qspi_nor_write(const struct device *dev, off_t addr,
 		return -EINVAL;
 	}
 
-uint32_t lockkey;
-lockkey = irq_lock();
+	lock_key = irq_lock();
 
 	nrfx_err_t res = NRFX_SUCCESS;
 
@@ -1229,7 +1228,8 @@ lockkey = irq_lock();
 	rc = qspi_get_zephyr_ret_code(res);
 out:
 	qspi_device_uninit(dev);
-irq_unlock(lockkey);
+	irq_unlock(lock_key);
+
 	return rc;
 }
 

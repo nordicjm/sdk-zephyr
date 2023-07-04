@@ -1444,9 +1444,9 @@ static int qspi_nor_pm_action(const struct device *dev,
 		}
 #endif
 
-	if (dev_data->xip_enabled) {
+		if (dev_data->xip_enabled) {
 			return -EBUSY;
-	}
+		}
 
 		if (nrfx_qspi_mem_busy_check() != NRFX_SUCCESS) {
 			return -EBUSY;
@@ -1544,7 +1544,6 @@ PINCTRL_DT_DEFINE(QSPI_NODE);
 static const struct qspi_nor_config qspi_nor_dev_config = {
 	.nrfx_cfg.skip_gpio_cfg = true,
 	.nrfx_cfg.skip_psel_cfg = true,
-/*.nrfx_cfg.xip_offset = CONFIG_NORDIC_QSPI_NOR_XIP_ADDRESS,*/
 	.pcfg = PINCTRL_DT_DEV_CONFIG_GET(QSPI_NODE),
 	.nrfx_cfg.prot_if = {
 		.readoc = COND_CODE_1(DT_INST_NODE_HAS_PROP(0, readoc),

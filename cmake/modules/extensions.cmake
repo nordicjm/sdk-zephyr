@@ -420,7 +420,6 @@ endmacro()
 macro(zephyr_library_named name)
   # This is a macro because we need add_library() to be executed
   # within the scope of the caller.
-message("Library: ${name}")
 
   set(ZEPHYR_CURRENT_LIBRARY ${name})
   add_library(${name} STATIC "")

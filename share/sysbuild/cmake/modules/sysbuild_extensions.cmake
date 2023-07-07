@@ -251,6 +251,7 @@ function(ExternalZephyrProject_Add)
     BUILD_ALWAYS True
     USES_TERMINAL_BUILD True
   )
+
   set_property(TARGET ${ZBUILD_APPLICATION} PROPERTY APP_TYPE ${ZBUILD_APP_TYPE})
   set_property(TARGET ${ZBUILD_APPLICATION} PROPERTY CONFIG
                "# sysbuild controlled configuration settings\n"
@@ -399,6 +400,7 @@ function(ExternalZephyrProject_Cmake)
             "Location: ${SOURCE_DIR}"
     )
   endif()
+
   load_cache(IMAGE ${ZCMAKE_APPLICATION} BINARY_DIR ${BINARY_DIR})
   import_kconfig(CONFIG_ ${BINARY_DIR}/zephyr/.config TARGET ${ZCMAKE_APPLICATION})
 endfunction()

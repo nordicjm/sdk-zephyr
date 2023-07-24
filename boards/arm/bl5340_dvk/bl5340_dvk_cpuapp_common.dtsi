@@ -10,7 +10,7 @@
 	chosen {
 		zephyr,console = &uart0;
 		zephyr,shell-uart = &uart0;
-		zephyr,uart-mcumgr = &uart0;
+		zephyr,uart-mcumgr = &uart1;
 		zephyr,bt-mon-uart = &uart0;
 		zephyr,bt-c2h-uart = &uart0;
 		zephyr,display = &ili9340;
@@ -115,7 +115,7 @@
 
 &i2c1 {
 	compatible = "nordic,nrf-twim";
-	status = "okay";
+	status = "disabled";
 
 	pinctrl-0 = <&i2c1_default>;
 	pinctrl-1 = <&i2c1_sleep>;
@@ -233,6 +233,14 @@
 	current-speed = <115200>;
 	pinctrl-0 = <&uart0_default>;
 	pinctrl-1 = <&uart0_sleep>;
+	pinctrl-names = "default", "sleep";
+};
+
+&uart1 {
+	status = "okay";
+	current-speed = <115200>;
+	pinctrl-0 = <&uart1_default>;
+	pinctrl-1 = <&uart1_sleep>;
 	pinctrl-names = "default", "sleep";
 };
 

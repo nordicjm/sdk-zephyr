@@ -21,8 +21,10 @@
 #include <zephyr/mgmt/mcumgr/transport/smp.h>
 #include <mgmt/mcumgr/transport/smp_internal.h>
 
-#define LOG_MODULE_NAME smp_client
-LOG_MODULE_REGISTER(smp_client);
+//#define LOG_MODULE_NAME smp_client
+//LOG_MODULE_REGISTER(smp_client);
+LOG_MODULE_REGISTER(mcumgr_client, 4);
+
 
 struct smp_client_cmd_req {
 	sys_snode_t node;

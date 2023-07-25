@@ -45,6 +45,10 @@
 #include <zephyr/mgmt/mcumgr/grp/zephyr/zephyr_basic.h>
 #endif
 
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(smp_thing, 4);
+
+
 #ifdef CONFIG_MCUMGR_SMP_SUPPORT_ORIGINAL_PROTOCOL
 static int smp_translate_error_code(uint16_t group, uint16_t ret)
 {
@@ -176,6 +180,8 @@ static int smp_build_err_rsp(struct smp_streamer *streamer, const struct smp_hdr
 			 zsp->payload_mut - nbw->nb->data - MGMT_HDR_SIZE);
 	nbw->nb->len = zsp->payload_mut - nbw->nb->data;
 	smp_write_hdr(streamer, &rsp_hdr);
+
+LOG_ERR("send: op: %d, group: %d", rsp_hdr.nh_op, rsp_hdr.nh_group);
 
 	return 0;
 }
@@ -362,6 +368,7 @@ static void smp_on_err(struct smp_streamer *streamer, const struct smp_hdr *req_
 
 	/* Build and transmit the error response. */
 	rc = smp_build_err_rsp(streamer, req_hdr, status, rsn);
+
 	if (rc == 0) {
 		streamer->smpt->functions.output(rsp);
 		rsp = NULL;
@@ -411,6 +418,7 @@ int smp_process_request_packet(struct smp_streamer *streamer, void *vreq)
 	rsp = NULL;
 
 	while (req->len > 0) {
+LOG_HEXDUMP_ERR(req->data, req->len, "a req");
 		handler_found = false;
 		valid_hdr = false;
 
@@ -430,7 +438,10 @@ int smp_process_request_packet(struct smp_streamer *streamer, void *vreq)
 			break;
 		}
 
+LOG_ERR("op: %d, group: %d", req_hdr.nh_op, req_hdr.nh_group);
+
 		if (req_hdr.nh_op == MGMT_OP_READ || req_hdr.nh_op == MGMT_OP_WRITE) {
+LOG_ERR("Packet for server");
 			rsp = smp_alloc_rsp(req, streamer->smpt);
 			if (rsp == NULL) {
 				rc = MGMT_ERR_ENOMEM;
@@ -446,22 +457,29 @@ int smp_process_request_packet(struct smp_streamer *streamer, void *vreq)
 				break;
 			}
 
-			/* Trim processed request to free up space for subsequent responses. */
-			net_buf_pull(req, req_hdr.nh_len);
-
 			/* Send the response. */
 			rc = streamer->smpt->functions.output(rsp);
 			rsp = NULL;
 		} else if (IS_ENABLED(CONFIG_SMP_CLIENT) && (req_hdr.nh_op == MGMT_OP_READ_RSP ||
 			   req_hdr.nh_op == MGMT_OP_WRITE_RSP)) {
+LOG_ERR("Packet for client, rc = %d", rc);
 			rc = smp_client_single_response(req, &req_hdr);
+LOG_ERR("now rc = %d", rc);
+
 			if (rc == MGMT_ERR_EOK) {
 				handler_found = true;
 			}
+else
+{
+valid_hdr = false;
+}
 
 		} else {
 			rc = MGMT_ERR_ENOTSUP;
 		}
+
+		/* Trim processed request to free up space for subsequent responses. */
+		net_buf_pull(req, req_hdr.nh_len);
 
 		if (rc != 0) {
 			break;
@@ -476,6 +494,8 @@ int smp_process_request_packet(struct smp_streamer *streamer, void *vreq)
 					   sizeof(cmd_done_arg), &ret_rc, &ret_group);
 #endif
 	}
+
+LOG_ERR("I got rc: %d", rc);
 
 	if (rc != 0 && valid_hdr) {
 		smp_on_err(streamer, &req_hdr, req, rsp, rc, rsn);

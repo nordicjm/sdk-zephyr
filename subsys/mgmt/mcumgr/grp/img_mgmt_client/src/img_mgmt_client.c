@@ -6,8 +6,8 @@
 
 #define LOG_MODULE_NAME mcumgr_client_img_grp
 
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(LOG_MODULE_NAME);
+//#include <zephyr/logging/log.h>
+//LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #include <stddef.h>
 #include <stdio.h>
@@ -32,6 +32,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 #include <mgmt/mcumgr/transport/smp_internal.h>
 
 #define MCUMGR_UPLOAD_INIT_HEADER_BUF_SIZE 128
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(img_client, 4);
 
 /* Pointer for active Client */
 static struct img_mgmt_client *active_client;
@@ -191,21 +194,26 @@ static int image_upload_res_fn(struct net_buf *nb, void *user_data)
 	zcbor_state_t zsd[CONFIG_MCUMGR_SMP_CBOR_MAX_DECODING_LEVELS + 2];
 	size_t decoded;
 	int rc;
+	int32_t res_rc = MGMT_ERR_EOK;
 
 	struct zcbor_map_decode_key_val upload_res_decode[] = {
 		ZCBOR_MAP_DECODE_KEY_DECODER("off", zcbor_size_decode,
 					     &image_upload_buf->image_upload_offset),
-		ZCBOR_MAP_DECODE_KEY_DECODER("rc", zcbor_int32_decode, &image_upload_buf->status)};
+		ZCBOR_MAP_DECODE_KEY_DECODER("rc", zcbor_int32_decode, &res_rc)};
 
+LOG_ERR("in handler");
 	if (!nb) {
+LOG_ERR("No nb");
 		image_upload_buf->status = MGMT_ERR_ETIMEOUT;
 		goto end;
 	}
+	image_upload_buf->status = res_rc;
 
 	zcbor_new_decode_state(zsd, ARRAY_SIZE(zsd), nb->data, nb->len, 1);
 
 	rc = zcbor_map_decode_bulk(zsd, upload_res_decode, ARRAY_SIZE(upload_res_decode), &decoded);
 	if (rc || image_upload_buf->image_upload_offset == SIZE_MAX) {
+//LOG_ERR("rc = %d, offset = %d", rc, image_upload_buf->image_upload_offset);
 		image_upload_buf->status = MGMT_ERR_EINVAL;
 		goto end;
 	}
@@ -213,6 +221,7 @@ static int image_upload_res_fn(struct net_buf *nb, void *user_data)
 	active_client->upload.offset = image_upload_buf->image_upload_offset;
 end:
 	/* Set status for Upload request handler */
+//LOG_ERR("rc at here is %d", rc);
 	rc = image_upload_buf->status;
 	k_sem_give(user_data);
 	return rc;
@@ -414,6 +423,7 @@ int img_mgmt_client_upload(struct img_mgmt_client *client, const uint8_t *data, 
 		k_sem_reset(&mcumgr_img_client_grp_sem);
 
 		image_upload_buf->status = MGMT_ERR_EINVAL;
+//		image_upload_buf->status = 0;
 		image_upload_buf->image_upload_offset = SIZE_MAX;
 
 		rc = smp_client_send_cmd(active_client->smp_client, nb, image_upload_res_fn,

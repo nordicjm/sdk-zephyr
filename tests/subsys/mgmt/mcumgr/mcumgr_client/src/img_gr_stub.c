@@ -47,9 +47,16 @@ void img_upload_response(size_t offset, int status)
 	zcbor_new_encode_state(zse, ARRAY_SIZE(zse), nb->data, net_buf_tailroom(nb), 0);
 
 	/* Init map start and write image info and data */
-	ok = zcbor_map_start_encode(zse, 4) && zcbor_tstr_put_lit(zse, "rc") &&
+	if (status) {
+		ok = zcbor_map_start_encode(zse, 4) && zcbor_tstr_put_lit(zse, "rc") &&
 	     zcbor_int32_put(zse, status) && zcbor_tstr_put_lit(zse, "off") &&
 	     zcbor_size_put(zse, offset) && zcbor_map_end_encode(zse, 4);
+	} else {
+		/* Drop Status away from response */
+		ok = zcbor_map_start_encode(zse, 2) && zcbor_tstr_put_lit(zse, "off") &&
+	     zcbor_size_put(zse, offset) && zcbor_map_end_encode(zse, 4);
+	}
+
 	if (!ok) {
 		smp_client_response_buf_clean();
 	} else {

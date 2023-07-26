@@ -478,12 +478,12 @@ valid_hdr = false;
 			rc = MGMT_ERR_ENOTSUP;
 		}
 
-		/* Trim processed request to free up space for subsequent responses. */
-		net_buf_pull(req, req_hdr.nh_len);
-
 		if (rc != 0) {
 			break;
 		}
+
+		/* Trim processed request to free up space for subsequent responses. */
+		net_buf_pull(req, req_hdr.nh_len);
 
 #if defined(CONFIG_MCUMGR_SMP_COMMAND_STATUS_HOOKS)
 		cmd_done_arg.group = req_hdr.nh_group;

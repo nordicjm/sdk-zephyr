@@ -14,17 +14,14 @@
 #include <zephyr/init.h>
 #include <zephyr/sys/byteorder.h>
 #include <zephyr/net/buf.h>
-#include <zephyr/logging/log.h>
 #include <zephyr/mgmt/mcumgr/mgmt/mgmt.h>
 #include <zephyr/mgmt/mcumgr/smp/smp.h>
 #include <zephyr/mgmt/mcumgr/smp/smp_client.h>
 #include <zephyr/mgmt/mcumgr/transport/smp.h>
 #include <mgmt/mcumgr/transport/smp_internal.h>
 
-//#define LOG_MODULE_NAME smp_client
-//LOG_MODULE_REGISTER(smp_client);
-LOG_MODULE_REGISTER(mcumgr_client, 4);
-
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(smp_client, CONFIG_MCUMGR_LOG_LEVEL);
 
 struct smp_client_cmd_req {
 	sys_snode_t node;

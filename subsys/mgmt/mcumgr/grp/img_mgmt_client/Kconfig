@@ -32,8 +32,4 @@ config MCUMGR_GRP_IMG_FLASH_OPERATION_TIMEOUT
 	help
 	  Change default value when platform needs a different time.
 
-module = MCUMGR_GRP_IMG_CLIENT
-module-str = mcumgr_grp_img_client
-source "subsys/logging/Kconfig.template.log_config"
-
 endif

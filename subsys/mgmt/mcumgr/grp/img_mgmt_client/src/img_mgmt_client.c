@@ -4,11 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define LOG_MODULE_NAME mcumgr_client_img_grp
-
-//#include <zephyr/logging/log.h>
-//LOG_MODULE_REGISTER(LOG_MODULE_NAME);
-
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -31,10 +26,10 @@
 #include <mgmt/mcumgr/util/zcbor_bulk.h>
 #include <mgmt/mcumgr/transport/smp_internal.h>
 
-#define MCUMGR_UPLOAD_INIT_HEADER_BUF_SIZE 128
-
 #include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(img_client, 4);
+LOG_MODULE_REGISTER(mcumgr_grp_img_client, CONFIG_MCUMGR_LOG_LEVEL);
+
+#define MCUMGR_UPLOAD_INIT_HEADER_BUF_SIZE 128
 
 /* Pointer for active Client */
 static struct img_mgmt_client *active_client;
@@ -231,7 +226,7 @@ static int erase_res_fn(struct net_buf *nb, void *user_data)
 {
 	zcbor_state_t zsd[CONFIG_MCUMGR_SMP_CBOR_MAX_DECODING_LEVELS + 2];
 	size_t decoded;
-	int rc, status;
+	int rc, status = MGMT_ERR_EOK;
 
 	struct zcbor_map_decode_key_val upload_res_decode[] = {
 		ZCBOR_MAP_DECODE_KEY_DECODER("rc", zcbor_int32_decode, &status)
@@ -241,12 +236,11 @@ static int erase_res_fn(struct net_buf *nb, void *user_data)
 		active_client->status = MGMT_ERR_ETIMEOUT;
 		goto end;
 	}
-	status = -1;
 
 	zcbor_new_decode_state(zsd, ARRAY_SIZE(zsd), nb->data, nb->len, 1);
 
 	rc = zcbor_map_decode_bulk(zsd, upload_res_decode, ARRAY_SIZE(upload_res_decode), &decoded);
-	if (rc || status == -1) {
+	if (rc) {
 		LOG_ERR("Erase fail %d", rc);
 		active_client->status = MGMT_ERR_EINVAL;
 		goto end;

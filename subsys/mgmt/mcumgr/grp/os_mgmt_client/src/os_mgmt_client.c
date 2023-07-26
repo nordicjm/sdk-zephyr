@@ -4,11 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#define LOG_MODULE_NAME mcumgr_client_os_grp
-
-#include <zephyr/logging/log.h>
-LOG_MODULE_REGISTER(LOG_MODULE_NAME);
-
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,6 +25,9 @@ LOG_MODULE_REGISTER(LOG_MODULE_NAME);
 
 #include <mgmt/mcumgr/util/zcbor_bulk.h>
 #include <mgmt/mcumgr/transport/smp_internal.h>
+
+#include <zephyr/logging/log.h>
+LOG_MODULE_REGISTER(mcumgr_grp_os_client, CONFIG_MCUMGR_LOG_LEVEL);
 
 static struct os_mgmt_client *active_client;
 static K_SEM_DEFINE(mcummgr_os_client_grp_sem, 0, 1);

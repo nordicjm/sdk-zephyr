@@ -418,14 +418,22 @@ static int qspi_device_init(const struct device *dev)
 			.wipwait   = true,
 		};
 
+		/* Note: This assumes using the mx25r64 on the nRF5340dk for the quad enable
+		 * bit position
+		 */
 		uint8_t flash_chip_cfg[] = {
 			/* QE (Quad Enable) bit = 1 */
-			//BIT(6),
-			0x00,
+			BIT(6),
 			0x00,
 			/* L/H Switch bit = 1 -> High Performance mode */
 			BIT(1),
 		};
+
+		if (dev_config->nrfx_cfg.prot_if.readoc == NRF_QSPI_READOC_FASTREAD &&
+		    dev_config->nrfx_cfg.prot_if.writeoc == NRF_QSPI_WRITEOC_PP) {
+			/* Do not set quad-enable bit */
+			flash_chip_cfg[0] = 0;
+		}
 
 		nrf_clock_hfclk192m_div_set(NRF_CLOCK, NRF_CLOCK_HFCLK_DIV_1);
 

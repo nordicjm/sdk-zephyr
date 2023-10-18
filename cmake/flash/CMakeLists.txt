@@ -36,8 +36,17 @@ function(runners_yaml_append_config)
   get_runners_prop(elf_file elf "${KERNEL_ELF_NAME}")
   runners_yaml_append("  # Build outputs:")
   runners_yaml_append("  elf_file: ${elf}")
+
+
+zephyr_get(alt_file VAR ALT_SIGNED_HEX_FILE SYSBUILD)
+
+
   if(CONFIG_BUILD_OUTPUT_HEX)
+if(DEFINED alt_file)
+set(hex "${alt_file}")
+else()
     get_runners_prop(hex_file hex "${KERNEL_HEX_NAME}")
+endif()
   else()
     get_runners_prop(hex_file hex "")
   endif()

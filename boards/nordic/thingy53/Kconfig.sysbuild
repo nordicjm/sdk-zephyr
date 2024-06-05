@@ -7,14 +7,11 @@ choice BOOTLOADER
 	default BOOTLOADER_MCUBOOT
 endchoice
 
-config SECURE_BOOT
+config SECURE_BOOT_NETCORE
 	default y
 
-config SECURE_BOOT_NETCORE
-	default y if SECURE_BOOT
-
 config NETCORE_APP_UPDATE
-	default y if SECURE_BOOT
+	default y if SECURE_BOOT_NETCORE
 
 config NRF_DEFAULT_EMPTY
 	default y

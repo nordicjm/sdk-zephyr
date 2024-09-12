@@ -1,0 +1,1 @@
+zconf nrf5340dk//cpuapp -DEXTRA_DTC_OVERLAY_FILE=/tmp/bb/zephyr/samples/subsys/mgmt/mcumgr/smp_svr/do.overlay -Dmcuboot_EXTRA_DTC_OVERLAY_FILE=/tmp/bb/zephyr/samples/subsys/mgmt/mcumgr/smp_svr/do.overlay -DEXTRA_CONF_FILE="overlay-bt.conf"

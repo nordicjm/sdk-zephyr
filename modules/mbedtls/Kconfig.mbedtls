@@ -676,6 +676,19 @@ config MBEDTLS_PSA_STATIC_KEY_SLOTS
 	  contain the largest asymmetric/symmetric key type enabled in the build
 	  through PSA_WANT symbols.
 
+if MBEDTLS_PSA_STATIC_KEY_SLOTS
+
+config MBEDTLS_PSA_STATIC_KEY_SLOT_BUFFER_SIZE
+	int "PSA static key slot buffer size in bytes"
+	default 0
+	help
+	  The size in bytes of the static buffer used to hold the key material
+	  when MBEDTLS_PSA_STATIC_KEY_SLOTS is enabled.
+	  If not set (value of 0), Mbed TLS tries to guess its value
+	  based on the most common key types enabled in the build.
+
+endif # MBEDTLS_PSA_STATIC_KEY_SLOTS
+
 config MBEDTLS_PSA_KEY_SLOT_COUNT
 	int "Number of key slots in PSA Crypto core"
 	default 16

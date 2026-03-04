@@ -23,7 +23,7 @@
 		nordic,802154-spinel-ipc = &ipc0;
 		zephyr,sram = &sram1;
 		zephyr,flash = &flash1;
-		zephyr,code-partition = &slot0_partition;
+		zephyr,code-partition = &s0_partition;
 		zephyr,ieee802154 = &ieee802154;
 	};
 
@@ -175,3 +175,28 @@ fem_spi: &spi0 {
 
 /* Include default shared RAM configuration file */
 #include <nordic/nrf5340_shared_sram_partition.dtsi>
+
+/delete-node/ &boot_partition;
+/delete-node/ &slot0_partition;
+/delete-node/ &slot1_partition;
+/delete-node/ &storage_partition;
+
+&flash1 {
+	partitions {
+		b0n: partition@0 {
+			label = "b0n";
+			reg = <0x00000000 0x00008580>;
+		};
+
+		provision: partition@8580 {
+			label = "b0-provision-data";
+			reg = <0x00008580 0x00000280>;
+		};
+
+		s0_partition: partition@8600 {
+			label = "image-0";
+			reg = <0x00008600 0x00037a00>;
+		};
+	};
+};
+

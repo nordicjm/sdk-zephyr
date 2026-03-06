@@ -349,9 +349,11 @@ static inline int inspect_device(const struct stream_flash_ctx *ctx)
 
 	if (inspect_flash_ctx.total_size == 0) {
 		LOG_ERR("Device seems to have 0 size");
+printk("j1\n");
 		return -EFAULT;
 	} else if (inspect_flash_ctx.total_size < (ctx->offset + ctx->available)) {
 		LOG_ERR("Requested range overflows device size");
+printk("j2 0x%x 0x%x 0x%x\n", inspect_flash_ctx.total_size, ctx->offset, ctx->available);
 		return -EFAULT;
 	}
 
@@ -372,6 +374,7 @@ int stream_flash_init(struct stream_flash_ctx *ctx, const struct device *fdev,
 	const struct flash_parameters *params;
 
 	if (!ctx || !fdev || !buf) {
+printk("u1\n");
 		return -EFAULT;
 	}
 
@@ -379,16 +382,19 @@ int stream_flash_init(struct stream_flash_ctx *ctx, const struct device *fdev,
 
 	if (buf_len % params->write_block_size) {
 		LOG_ERR("Buffer size is not aligned to minimal write-block-size");
+printk("u2\n");
 		return -EFAULT;
 	}
 
 	if (offset % params->write_block_size) {
 		LOG_ERR("Incorrect parameter");
+printk("u3\n");
 		return -EFAULT;
 	}
 
 	if (size == 0 || size % params->write_block_size) {
 		LOG_ERR("Size is incorrect");
+printk("u4\n");
 		return -EFAULT;
 	}
 
@@ -419,6 +425,7 @@ int stream_flash_init(struct stream_flash_ctx *ctx, const struct device *fdev,
 
 		if (ret != 0) {
 			/* No log here, the inspect_device already does logging */
+printk("well that failed\n");
 			return ret;
 		}
 	}

@@ -13,7 +13,7 @@
 	compatible = "nordic,nrf5340-dk-nrf5340-cpuapp";
 
 	chosen {
-		zephyr,sram = &sram0_image;
+		zephyr,sram = &sram0_offset_for_dfu;
 		zephyr,flash = &flash0;
 		zephyr,code-partition = &slot0_partition;
 		zephyr,sram-secure-partition = &sram0_s;

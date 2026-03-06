@@ -8,7 +8,7 @@
 */
 
                 slot2_partition: partition@120000 {
-                        label = "image-3";
+                        label = "image-2";
                         reg = <0x00120000 0x00040000>;
                 };
         };

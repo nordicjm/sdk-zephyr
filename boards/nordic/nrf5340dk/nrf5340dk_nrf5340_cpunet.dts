@@ -123,7 +123,7 @@ arduino_spi: &spi0 {
 			reg = <0x00000000 0x00008580>;
 		};
 
-		provision_partition: partition@8580 {
+		bl_storage: provision_partition: partition@8580 {
 			label = "b0-provision-data";
 			reg = <0x00008580 0x00000280>;
 		};

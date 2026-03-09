@@ -73,7 +73,7 @@
 
 		slot3_partition: partition@e0000 {
 			label = "image-3";
-			reg = <0x000e0000 0x00040000>;
+			reg = <0x000e0000 0x38000>;
 		};
 	};
 };

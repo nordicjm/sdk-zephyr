@@ -118,19 +118,19 @@ arduino_spi: &spi0 {
 
 &flash1 {
 	partitions {
-		b0n: partition@0 {
+		b0n_partition: partition@0 {
 			label = "b0n";
 			reg = <0x00000000 0x00008580>;
 		};
 
-		provision: partition@8580 {
+		provision_partition: partition@8580 {
 			label = "b0-provision-data";
 			reg = <0x00008580 0x00000280>;
 		};
 
-		s0_partition: partition@8600 {
+		s0_partition: partition@8800 {
 			label = "image-0";
-			reg = <0x00008600 0x00037a00>;
+			reg = <0x00008800 0x00037800>;
 		};
 	};
 };

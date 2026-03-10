@@ -1,0 +1,1 @@
+rm -rf * && cmake -GNinja -DBOARD=nrf54l15dk/nrf54l15/cpuapp -DAPP_DIR=.. -DSB_CONFIG_SECURE_BOOT_APPCORE=y -DSB_CONFIG_PARTITION_MANAGER=n -DSB_CONFIG_DFU_ZIP=n /home/jamie/PM_MCUBOOT/zephyr/share/sysbuild

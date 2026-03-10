@@ -10,7 +10,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		b0n_partition: boot_partition: partition@0 {
+		b0_partition: boot_partition: partition@0 {
 			label = "b0";
 			reg = <0x0 DT_SIZE_K(28)>;
 		};

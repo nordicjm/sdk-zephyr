@@ -1,0 +1,1 @@
+rm -rf * && cmake -GNinja -DBOARD=nrf52840dk/nrf52840 -DAPP_DIR=.. -DSB_CONFIG_SECURE_BOOT_APPCORE=y -DSB_CONFIG_PARTITION_MANAGER=n -DSB_CONFIG_DFU_ZIP=n -DEXTRA_DTC_OVERLAY_FILE=nrf52840.overlay /home/jamie/PM_MCUBOOT/zephyr/share/sysbuild

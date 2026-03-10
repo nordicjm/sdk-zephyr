@@ -18,33 +18,39 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
-		boot_partition: partition@0 {
-			label = "mcuboot";
-			reg = <0x00000000 0x0000c000>;
+		b0_partition: boot_partition: partition@0 {
+			label = "b0";
+			reg = <0x0 DT_SIZE_K(36)>;
 		};
 
-		slot0_partition: partition@c000 {
+		s0_partition: partition@9000 {
+			label = "s0";
+			reg = <0x9000 DT_SIZE_K(44)>;
+		};
+
+		s1_partition: partition@14000 {
+			label = "s1";
+			reg = <0x14000 DT_SIZE_K(44)>;
+		};
+
+		slot0_partition: partition@1f000 {
 			label = "image-0";
-			reg = <0x0000c000 0x00076000>;
+			reg = <0x1f000 DT_SIZE_K(432)>;
 		};
 
-		slot1_partition: partition@82000 {
+		slot1_partition: partition@8b000 {
 			label = "image-1";
-			reg = <0x00082000 0x00076000>;
+			reg = <0x8b000 DT_SIZE_K(432)>;
 		};
 
-		/*
-		 * The flash starting at 0x000f8000 and ending at
-		 * 0x000fffff is reserved for use by the application.
-		 */
+		bl_storage: partition@f7000 {
+			label = "bl_storage";
+			reg = <0xf7000 0x1000>;
+		};
 
-		/*
-		 * Storage partition will be used by FCB/LittleFS/NVS
-		 * if enabled.
-		 */
 		storage_partition: partition@f8000 {
 			label = "storage";
-			reg = <0x000f8000 0x00008000>;
+			reg = <0xf8000 DT_SIZE_K(32)>;
 		};
 	};
 };

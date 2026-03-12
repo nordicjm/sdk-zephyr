@@ -10,6 +10,7 @@
 		#address-cells = <1>;
 		#size-cells = <1>;
 
+#if 0
 		b0_partition: boot_partition: partition@0 {
 			label = "b0";
 			reg = <0x0 DT_SIZE_K(28)>;
@@ -39,6 +40,39 @@
 			label = "storage";
 			reg = <0x15c000 DT_SIZE_K(36)>;
 		};
+	};
+#endif
+		b0_partition: boot_partition: partition@0 {
+			label = "b0";
+			reg = <0x0 0x7800>;
+		};
+
+		s0_partition: partition@8000 {
+			label = "s0";
+			reg = <0x8000 0xe000>;
+		};
+
+		s1_partition: partition@16000 {
+			label = "s1";
+			reg = <0x16000 0xe000>;
+		};
+
+		slot0_partition: partition@24000 {
+			label = "image-0";
+			reg = <0x24000 0xa0000>;
+		};
+
+		slot1_partition: partition@c4000 {
+			label = "image-1";
+			reg = <0xc4000 0xa0000>;
+		};
+
+/*
+		storage_partition: partition@15c000 {
+			label = "storage";
+			reg = <0x15c000 DT_SIZE_K(36)>;
+		};
+*/
 	};
 };
 
